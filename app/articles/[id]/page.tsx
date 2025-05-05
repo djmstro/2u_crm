@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { RiArrowLeftLine, RiEdit2Line, RiCheckLine } from 'react-icons/ri';
 import Navigation from '../../components/Navigation';
 import DeleteArticleButton from '../../components/DeleteArticleButton';
+import AcknowledgeButton from '../../components/AcknowledgeButton';
 
 // Серверный компонент для загрузки данных статьи
 async function getArticle(id: string) {
@@ -51,6 +52,12 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
     );
   }
 
+  // В реальном приложении мы бы получали ID авторизованного пользователя
+  const MOCK_USER_ID = '6543210fedcba9876543210';
+  
+  // Проверка, ознакомлен ли пользователь с этой статьей
+  const isAcknowledged = article.acknowledged?.includes(MOCK_USER_ID);
+
   return (
     <div className="flex">
       <Navigation />
@@ -95,10 +102,11 @@ export default async function ArticleDetailPage({ params }: { params: { id: stri
           </div>
           
           <div className="mt-8">
-            <button className="btn-primary flex items-center">
-              <RiCheckLine className="mr-2" size={20} />
-              Ознакомлен с регламентом
-            </button>
+            <AcknowledgeButton 
+              articleId={article._id} 
+              userId={MOCK_USER_ID}
+              isAcknowledged={isAcknowledged}
+            />
           </div>
         </div>
       </main>

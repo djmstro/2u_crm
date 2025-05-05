@@ -4,6 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { RiArrowLeftLine, RiSaveLine } from 'react-icons/ri';
+import dynamic from 'next/dynamic';
+
+// Динамический импорт React Quill, чтобы избежать ошибок SSR
+const ReactQuill = dynamic(() => import('react-quill'), { 
+  ssr: false,
+  loading: () => <div className="min-h-[400px] flex items-center justify-center bg-white/5 border border-white/10 rounded-lg">
+    Загрузка редактора...
+  </div>
+});
+
+// Импорт стилей Quill
+import 'react-quill/dist/quill.snow.css';
 
 interface Section {
   _id: string;
@@ -21,6 +33,30 @@ interface ArticleFormProps {
   };
 }
 
+// Модули и форматы для редактора Quill
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    [{ indent: '-1' }, { indent: '+1' }],
+    [{ align: [] }],
+    ['link', 'image', 'blockquote', 'code-block'],
+    [{ color: [] }, { background: [] }],
+    ['clean'],
+    ['table'],
+  ]
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet', 'indent',
+  'link', 'image', 'blockquote', 'code-block',
+  'align', 'color', 'background',
+  'table'
+];
+
 const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialData }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -29,6 +65,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
   const [sections, setSections] = useState<Section[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -39,10 +76,17 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
   // Загружаем список разделов при монтировании компонента
   useEffect(() => {
     const fetchSections = async () => {
+      setIsLoading(true);
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
         const url = apiUrl ? `${apiUrl}/api/sections` : '/api/sections';
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          cache: 'no-store',
+          headers: {
+            'pragma': 'no-cache',
+            'cache-control': 'no-cache'
+          }
+        });
         if (!response.ok) {
           throw new Error('Не удалось загрузить разделы');
         }
@@ -51,6 +95,8 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
       } catch (err) {
         console.error('Ошибка при загрузке разделов:', err);
         setError('Не удалось загрузить разделы');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -60,6 +106,10 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleContentChange = (value: string) => {
+    setFormData(prev => ({ ...prev, content: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,6 +143,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
         throw new Error(errorData.error || 'Произошла ошибка');
       }
 
+      // Перенаправляем и обновляем страницу
       router.push('/articles');
       router.refresh();
     } catch (err: any) {
@@ -147,52 +198,69 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
 
         <div className="mb-6">
           <label htmlFor="section" className="block mb-2 font-medium">Раздел</label>
-          <select 
-            id="section"
-            name="section"
-            value={formData.section}
-            onChange={handleChange}
-            className="input-field"
-            required
-          >
-            <option value="">Выберите раздел</option>
-            {sections.map(section => (
-              <option key={section._id} value={section.priority}>
-                {section.name}
-              </option>
-            ))}
-          </select>
+          {isLoading ? (
+            <div className="p-2">Загрузка разделов...</div>
+          ) : sections.length > 0 ? (
+            <select 
+              id="section"
+              name="section"
+              value={formData.section}
+              onChange={handleChange}
+              className="input-field"
+              required
+            >
+              <option value="">Выберите раздел</option>
+              {sections.map(section => (
+                <option key={section._id} value={section.priority}>
+                  {section.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="p-2 text-red-400">
+              Нет доступных разделов. 
+              <Link href="/sections/new" className="text-primary ml-2 hover:underline">
+                Создать раздел
+              </Link>
+            </div>
+          )}
         </div>
         
         <div>
           <label htmlFor="content" className="block mb-2 font-medium">Содержание</label>
           
-          <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-            {/* Editor toolbar */}
-            <div className="flex flex-wrap items-center gap-1 p-2 border-b border-white/10">
-              <button type="button" className="p-2 rounded hover:bg-white/10 transition">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M6 4h8v5h-8z" fill="white" />
-                  <path d="M6 15h12v5h-12z" fill="white" />
-                  <path d="M16 4h2v5h-2zM6 10h12v4h-12z" fill="white" />
-                </svg>
-              </button>
-              {/* ... остальные кнопки форматирования ... */}
-            </div>
-            
-            {/* Editor content */}
-            <div className="min-h-[400px] p-4">
-              <textarea 
-                id="content"
-                name="content"
-                value={formData.content}
-                onChange={handleChange}
-                className="bg-transparent w-full h-full min-h-[400px] resize-none outline-none"
-                placeholder="Введите содержание статьи..."
-                required
-              ></textarea>
-            </div>
+          <div className="quill-wrapper">
+            <ReactQuill
+              value={formData.content}
+              onChange={handleContentChange}
+              modules={quillModules}
+              formats={quillFormats}
+              placeholder="Введите содержание статьи..."
+              theme="snow"
+              className="rounded-lg overflow-hidden bg-white text-black"
+            />
           </div>
+          
+          <style jsx global>{`
+            .quill-wrapper .ql-toolbar {
+              background-color: #f3f4f6;
+              border-top-left-radius: 0.5rem;
+              border-top-right-radius: 0.5rem;
+              border-color: #e5e7eb;
+            }
+            
+            .quill-wrapper .ql-container {
+              border-bottom-left-radius: 0.5rem;
+              border-bottom-right-radius: 0.5rem;
+              border-color: #e5e7eb;
+              min-height: 300px;
+            }
+            
+            .quill-wrapper .ql-editor {
+              min-height: 300px;
+              font-size: 1rem;
+            }
+          `}</style>
         </div>
       </div>
       

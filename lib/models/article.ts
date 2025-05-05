@@ -9,6 +9,7 @@ export interface IArticle {
   date: string;
   section: number;
   acknowledged?: string[]; // массив ID пользователей, ознакомленных со статьей
+  viewCount?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -23,7 +24,7 @@ const articleSchema = new Schema<IArticle>(
     },
     content: {
       type: String,
-      required: [true, 'Содержание обязательно'],
+      required: [true, 'Содержимое обязательно'],
     },
     author: {
       type: String,
@@ -41,11 +42,22 @@ const articleSchema = new Schema<IArticle>(
       type: [String],
       default: [],
     },
+    viewCount: {
+      type: Number,
+      default: 0
+    }
   },
   {
     timestamps: true, // Автоматически добавить createdAt и updatedAt
   }
 );
+
+// Метод для форматирования данных при преобразовании в JSON
+articleSchema.set('toJSON', {
+  transform: (_, returnedObject) => {
+    return returnedObject;
+  },
+});
 
 // Экспорт модели (если модель уже существует, используем ее, иначе создаем новую)
 export const Article = models.Article || model<IArticle>('Article', articleSchema);

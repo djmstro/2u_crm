@@ -4,6 +4,7 @@ import { RiAddLine, RiFilePaperLine, RiFolder3Line, RiSearchLine, RiEdit2Line } 
 import Navigation from '../components/Navigation';
 import DeleteArticleButton from '../components/DeleteArticleButton';
 import DeleteSectionButton from '../components/DeleteSectionButton';
+import SearchBar from '../components/SearchBar';
 
 // Интерфейсы для типизации данных
 interface Article {
@@ -91,22 +92,24 @@ export default async function ArticlesPage() {
             <h1 className="text-2xl font-bold">База знаний</h1>
             
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <RiSearchLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50" />
-                <input 
-                  type="text" 
-                  placeholder="Поиск..." 
-                  className="pl-10 input-field w-64"
-                />
-              </div>
+              <SearchBar />
               
-              <Link 
-                href="/articles/new" 
-                className="btn-primary flex items-center"
-              >
-                <RiAddLine className="mr-2" size={20} />
-                Новая статья
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link 
+                  href="/sections/new" 
+                  className="btn-outline inline-flex items-center"
+                >
+                  <RiAddLine className="mr-2" size={20} />
+                  Новый раздел
+                </Link>
+                <Link 
+                  href="/articles/new" 
+                  className="btn-primary flex items-center"
+                >
+                  <RiAddLine className="mr-2" size={20} />
+                  Новая статья
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -114,15 +117,8 @@ export default async function ArticlesPage() {
             <div className="card p-6 text-center">
               <p className="text-lg mb-4">База знаний пуста</p>
               <Link 
-                href="/sections/new" 
-                className="btn-primary inline-flex items-center mr-4"
-              >
-                <RiAddLine className="mr-2" size={20} />
-                Создать раздел
-              </Link>
-              <Link 
                 href="/articles/new" 
-                className="btn-outline inline-flex items-center"
+                className="btn-primary inline-flex items-center"
               >
                 <RiAddLine className="mr-2" size={20} />
                 Создать статью
@@ -206,16 +202,6 @@ export default async function ArticlesPage() {
               ))}
             </div>
           )}
-          
-          <div className="mt-8">
-            <Link 
-              href="/sections/new" 
-              className="btn-outline inline-flex items-center"
-            >
-              <RiAddLine className="mr-2" size={20} />
-              Создать новый раздел
-            </Link>
-          </div>
         </div>
       </main>
     </div>

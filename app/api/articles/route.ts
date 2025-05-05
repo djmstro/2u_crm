@@ -183,7 +183,13 @@ export async function GET(request: Request) {
     
     // Вернуть конкретную статью, если указан ID
     if (articleId) {
-      const article = await Article.findById(articleId);
+      // Найти статью и увеличить счетчик просмотров
+      const article = await Article.findByIdAndUpdate(
+        articleId,
+        { $inc: { viewCount: 1 } }, // Увеличиваем счетчик на 1
+        { new: true } // Вернуть обновленный документ
+      );
+      
       if (article) {
         return NextResponse.json(article);
       } else {
