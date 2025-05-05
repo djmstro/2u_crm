@@ -29,15 +29,24 @@ async function getSections() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
     const url = apiUrl ? `${apiUrl}/api/sections` : '/api/sections';
     
+    console.log('Запрос разделов:', url);
+    
     const res = await fetch(url, {
-      cache: 'no-store'
+      cache: 'no-store',
+      next: { revalidate: 0 },
+      headers: {
+        'pragma': 'no-cache',
+        'cache-control': 'no-cache'
+      }
     });
     
     if (!res.ok) {
       throw new Error('Не удалось загрузить разделы');
     }
     
-    return res.json();
+    const data = await res.json();
+    console.log('Загружено разделов:', data.length);
+    return data;
   } catch (error) {
     console.error('Ошибка при загрузке разделов:', error);
     return [];
@@ -50,15 +59,24 @@ async function getArticles() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
     const url = apiUrl ? `${apiUrl}/api/articles` : '/api/articles';
     
+    console.log('Запрос статей:', url);
+    
     const res = await fetch(url, {
-      cache: 'no-store'
+      cache: 'no-store',
+      next: { revalidate: 0 },
+      headers: {
+        'pragma': 'no-cache',
+        'cache-control': 'no-cache'
+      }
     });
     
     if (!res.ok) {
       throw new Error('Не удалось загрузить статьи');
     }
     
-    return res.json();
+    const data = await res.json();
+    console.log('Загружено статей:', data.length);
+    return data;
   } catch (error) {
     console.error('Ошибка при загрузке статей:', error);
     return [];
@@ -72,11 +90,21 @@ export default async function ArticlesPage() {
     getArticles(),
   ]);
 
+  console.log('Получено разделов:', sectionsData.length);
+  console.log('Получено статей:', articlesData.length);
+
   // Группируем статьи по разделам
   const sections: Section[] = sectionsData.map((section: Section) => {
-    const sectionArticles = articlesData.filter((article: Article) => 
-      article.section === section.priority
-    );
+    // Проверим секцию
+    console.log('Проверяем раздел:', section.name, 'с приоритетом:', section.priority);
+    
+    const sectionArticles = articlesData.filter((article: Article) => {
+      console.log('Проверяем статью:', article.title, 'с разделом:', article.section);
+      return article.section === section.priority;
+    });
+    
+    console.log(`Раздел ${section.name} содержит ${sectionArticles.length} статей`);
+    
     return {
       ...section,
       articles: sectionArticles,

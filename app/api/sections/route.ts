@@ -21,6 +21,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const sectionId = searchParams.get('id');
     
+    console.log('GET sections API запрос:', { 
+      sectionId, 
+      connectStatus: mongoose.connection.readyState
+    });
+    
     // Вернуть конкретный раздел, если указан ID
     if (sectionId) {
       const section = await Section.findById(sectionId);
@@ -33,6 +38,7 @@ export async function GET(request: Request) {
     
     // Вернуть все разделы
     const sections = await Section.find({}).sort({ priority: 1 });
+    console.log(`Найдено ${sections.length} разделов`);
     return NextResponse.json(sections);
   } catch (error) {
     console.error('Ошибка при получении разделов:', error);
@@ -49,6 +55,8 @@ export async function POST(request: Request) {
     
     const body = await request.json();
     const { name, priority, parentId } = body;
+    
+    console.log('POST запрос на создание раздела:', { name, priority });
     
     // Простая валидация
     if (!name) {
@@ -68,6 +76,8 @@ export async function POST(request: Request) {
     // Сохранение раздела в базе данных
     await newSection.save();
     
+    console.log('Создан новый раздел:', newSection._id);
+    
     // Возврат нового раздела
     return NextResponse.json(newSection);
   } catch (error) {
@@ -85,6 +95,8 @@ export async function PUT(request: Request) {
     
     const body = await request.json();
     const { id, name, priority, parentId } = body;
+    
+    console.log('PUT запрос на обновление раздела:', { id });
     
     if (!id) {
       return NextResponse.json(
@@ -111,6 +123,8 @@ export async function PUT(request: Request) {
       );
     }
     
+    console.log('Раздел обновлен:', id);
+    
     return NextResponse.json(updatedSection);
   } catch (error) {
     console.error('Ошибка при обновлении раздела:', error);
@@ -128,6 +142,8 @@ export async function DELETE(request: Request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
+    console.log('DELETE запрос на удаление раздела:', { id });
+    
     if (!id) {
       return NextResponse.json(
         { error: 'ID раздела обязателен' },
@@ -144,6 +160,8 @@ export async function DELETE(request: Request) {
         { status: 404 }
       );
     }
+    
+    console.log('Раздел удален:', id);
     
     return NextResponse.json({ 
       message: 'Раздел успешно удален',
