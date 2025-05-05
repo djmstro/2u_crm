@@ -29,7 +29,7 @@ async function getSections() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
     const url = apiUrl ? `${apiUrl}/api/sections` : '/api/sections';
     
-    console.log('Запрос разделов:', url);
+    console.log('🔍 Запрос разделов:', url);
     
     const res = await fetch(url, {
       cache: 'no-store',
@@ -41,14 +41,16 @@ async function getSections() {
     });
     
     if (!res.ok) {
+      console.error('❌ Ошибка при загрузке разделов:', res.status, res.statusText);
       throw new Error('Не удалось загрузить разделы');
     }
     
     const data = await res.json();
-    console.log('Загружено разделов:', data.length);
+    console.log('✅ Загружено разделов:', data.length);
+    console.log('📊 Данные разделов:', JSON.stringify(data, null, 2));
     return data;
   } catch (error) {
-    console.error('Ошибка при загрузке разделов:', error);
+    console.error('❌ Ошибка при загрузке разделов:', error);
     return [];
   }
 }
@@ -59,7 +61,7 @@ async function getArticles() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
     const url = apiUrl ? `${apiUrl}/api/articles` : '/api/articles';
     
-    console.log('Запрос статей:', url);
+    console.log('🔍 Запрос статей:', url);
     
     const res = await fetch(url, {
       cache: 'no-store',
@@ -71,14 +73,16 @@ async function getArticles() {
     });
     
     if (!res.ok) {
+      console.error('❌ Ошибка при загрузке статей:', res.status, res.statusText);
       throw new Error('Не удалось загрузить статьи');
     }
     
     const data = await res.json();
-    console.log('Загружено статей:', data.length);
+    console.log('✅ Загружено статей:', data.length);
+    console.log('📊 Данные статей:', JSON.stringify(data, null, 2));
     return data;
   } catch (error) {
-    console.error('Ошибка при загрузке статей:', error);
+    console.error('❌ Ошибка при загрузке статей:', error);
     return [];
   }
 }
@@ -90,20 +94,31 @@ export default async function ArticlesPage() {
     getArticles(),
   ]);
 
-  console.log('Получено разделов:', sectionsData.length);
-  console.log('Получено статей:', articlesData.length);
+  console.log('📦 Получено разделов:', sectionsData.length);
+  console.log('📦 Получено статей:', articlesData.length);
+  console.log('🌐 NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
 
   // Группируем статьи по разделам
   const sections: Section[] = sectionsData.map((section: Section) => {
-    // Проверим секцию
-    console.log('Проверяем раздел:', section.name, 'с приоритетом:', section.priority);
+    // Проверяем тип данных приоритета
+    console.log(`🔢 Проверяем раздел: "${section.name}", priority:`, section.priority, `(тип: ${typeof section.priority})`);
     
     const sectionArticles = articlesData.filter((article: Article) => {
-      console.log('Проверяем статью:', article.title, 'с разделом:', article.section);
-      return article.section === section.priority;
+      // Проверяем тип данных номера раздела в статье
+      console.log(`🔢 Проверяем статью: "${article.title}", section:`, article.section, `(тип: ${typeof article.section})`);
+      
+      // Используем строковое сравнение для надежного сопоставления независимо от типов
+      const sectionMatch = String(article.section) === String(section.priority);
+      
+      if (sectionMatch) {
+        console.log(`   ✅ Статья "${article.title}" соответствует разделу "${section.name}"`);
+      }
+      
+      // Возвращаем результат строкового сравнения
+      return sectionMatch;
     });
     
-    console.log(`Раздел ${section.name} содержит ${sectionArticles.length} статей`);
+    console.log(`📊 Раздел "${section.name}" содержит ${sectionArticles.length} статей`);
     
     return {
       ...section,
