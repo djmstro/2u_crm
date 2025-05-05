@@ -13,16 +13,18 @@ interface User {
   acknowledgedArticles: string[];
 }
 
+interface TopArticle {
+  _id: string;
+  title: string;
+  viewCount: number;
+}
+
 interface Statistics {
   articlesCount: number;
   sectionsCount: number;
   usersCount: number;
   actionsCount: number;
-  topArticles: {
-    _id: string;
-    title: string;
-    viewCount: number;
-  }[];
+  topArticles: TopArticle[];
 }
 
 // Серверные функции для получения данных
@@ -279,7 +281,7 @@ export default async function AdminPage() {
                   <h4 className="font-medium mb-4">Топ статей по просмотрам</h4>
                   <ul className="space-y-3">
                     {statistics.topArticles && statistics.topArticles.length > 0 ? (
-                      statistics.topArticles.map(article => (
+                      statistics.topArticles.map((article: TopArticle) => (
                         <li key={article._id} className="flex items-center justify-between">
                           <Link href={`/articles/${article._id}`} className="text-sm text-white/70 hover:text-white">
                             {article.title}
