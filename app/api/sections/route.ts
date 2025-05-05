@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Section, ISection } from '../../../lib/models/section';
-import connectToDatabase from '../../../lib/mongodb';
+import mongoose from 'mongoose';
 
 export async function GET(request: Request) {
   try {
@@ -9,10 +9,9 @@ export async function GET(request: Request) {
     
     // Здесь используем относительный импорт mongoose вместо функции connectToDatabase
     // из-за проблем с типами
-    const mongoose = require('mongoose');
     if (mongoose.connection.readyState !== 1) {
       console.log('🔄 API /sections: Подключение к MongoDB...');
-      await mongoose.connect(process.env.MONGODB_URI);
+      await mongoose.connect(process.env.MONGODB_URI || '');
       console.log('✅ API /sections: Подключение к MongoDB успешно');
     } else {
       console.log('✅ API /sections: Уже подключено к MongoDB');
@@ -60,7 +59,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await connectToDatabase();
+    // Прямое подключение к MongoDB
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI || '');
+    }
     
     const body = await request.json();
     const { name, priority, parentId } = body;
@@ -100,7 +102,10 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    await connectToDatabase();
+    // Прямое подключение к MongoDB
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI || '');
+    }
     
     const body = await request.json();
     const { id, name, priority, parentId } = body;
@@ -146,7 +151,10 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    await connectToDatabase();
+    // Прямое подключение к MongoDB
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI || '');
+    }
     
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

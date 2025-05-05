@@ -21,7 +21,7 @@ export async function GET() {
     
     // Проверяем соответствие статей и разделов
     const sectionMap = new Map();
-    sections.forEach(section => {
+    sections.forEach((section: any) => {
       sectionMap.set(section.priority, {
         id: section._id.toString(),
         name: section.name,
@@ -32,7 +32,7 @@ export async function GET() {
     });
     
     // Проверяем каждую статью
-    articles.forEach(article => {
+    articles.forEach((article: any) => {
       const sectionKey = article.section;
       const sectionInfo = sectionMap.get(sectionKey);
       
@@ -59,7 +59,7 @@ export async function GET() {
       articleCount: articles.length,
       sectionCount: sections.length,
       sections: result,
-      orphanedArticles: articles.filter(a => !sectionMap.has(a.section)).map(a => ({
+      orphanedArticles: articles.filter((a: any) => !sectionMap.has(a.section)).map((a: any) => ({
         id: a._id.toString(),
         title: a.title,
         section: a.section,

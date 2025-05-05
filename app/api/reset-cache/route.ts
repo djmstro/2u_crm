@@ -9,10 +9,18 @@ export async function GET() {
     const initialState = mongoose.connection.readyState;
     console.log('🔍 API /reset-cache: Текущий статус соединения:', initialState);
     
-    if (global.mongoose && global.mongoose.conn) {
+    // Используем типизированный доступ к глобальным переменным
+    const globalWithMongoose = global as typeof globalThis & {
+      mongoose?: {
+        conn: typeof mongoose | null;
+        promise: Promise<typeof mongoose> | null;
+      }
+    };
+    
+    if (globalWithMongoose.mongoose && globalWithMongoose.mongoose.conn) {
       console.log('🔄 API /reset-cache: Сброс кэшированного соединения MongoDB');
-      global.mongoose.conn = null;
-      global.mongoose.promise = null;
+      globalWithMongoose.mongoose.conn = null;
+      globalWithMongoose.mongoose.promise = null;
     }
     
     // Закрываем текущее соединение

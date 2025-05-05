@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { Article, IArticle } from '../../../lib/models/article';
-import connectToDatabase from '../../../lib/mongodb';
+import mongoose from 'mongoose';
+
+// Импортируем функцию соединения с MongoDB
+import * as db from '../../../lib/mongodb';
 
 export async function GET(request: Request) {
   try {
@@ -8,8 +11,14 @@ export async function GET(request: Request) {
     console.log('🌐 API /articles: NEXT_PUBLIC_API_URL =', process.env.NEXT_PUBLIC_API_URL);
     console.log('🔌 API /articles: MONGODB_URI =', process.env.MONGODB_URI ? 'Настроен (скрыт)' : 'Не настроен');
     
-    await connectToDatabase();
-    console.log('✅ API /articles: Подключение к MongoDB успешно');
+    // Используем функцию напрямую из mongoose для избежания проблем с типами
+    if (mongoose.connection.readyState !== 1) {
+      console.log('🔄 API /articles: Подключение к MongoDB...');
+      await mongoose.connect(process.env.MONGODB_URI || '');
+      console.log('✅ API /articles: Подключение к MongoDB успешно');
+    } else {
+      console.log('✅ API /articles: MongoDB уже подключена');
+    }
     
     const { searchParams } = new URL(request.url);
     const sectionId = searchParams.get('section');
@@ -68,7 +77,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await connectToDatabase();
+    // Подключаемся к MongoDB напрямую
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI || '');
+    }
     
     const body = await request.json();
     const { title, content, section, author } = body;
@@ -110,7 +122,10 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    await connectToDatabase();
+    // Подключаемся к MongoDB напрямую
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI || '');
+    }
     
     const body = await request.json();
     const { id, title, content, section } = body;
@@ -156,7 +171,10 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    await connectToDatabase();
+    // Подключаемся к MongoDB напрямую
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGODB_URI || '');
+    }
     
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
