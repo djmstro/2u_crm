@@ -9,34 +9,35 @@ interface Section {
   _id: string;
   name: string;
   priority: number;
+  parentId?: string;
 }
 
-interface ArticleFormProps {
+interface SectionFormProps {
   isEditing?: boolean;
   initialData?: {
     _id?: string;
-    title: string;
-    content: string;
-    section: number;
+    name: string;
+    priority: number;
+    parentId?: string;
   };
 }
 
-const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialData }) => {
+const SectionForm: React.FC<SectionFormProps> = ({ isEditing = false, initialData }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sectionParam = searchParams.get('section');
+  const parentParam = searchParams.get('parent');
 
   const [sections, setSections] = useState<Section[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
-    title: initialData?.title || '',
-    content: initialData?.content || '',
-    section: initialData?.section || sectionParam || '',
+    name: initialData?.name || '',
+    priority: initialData?.priority || 0,
+    parentId: initialData?.parentId || parentParam || '',
   });
 
-  // Загружаем список разделов при монтировании компонента
+  // Загружаем список разделов для выбора родительского раздела
   useEffect(() => {
     const fetchSections = async () => {
       try {
@@ -45,7 +46,11 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
           throw new Error('Не удалось загрузить разделы');
         }
         const data = await response.json();
-        setSections(data);
+        // Исключаем текущий раздел из списка доступных родительских, если это режим редактирования
+        const filteredSections = isEditing && initialData?._id 
+          ? data.filter((section: Section) => section._id !== initialData._id)
+          : data;
+        setSections(filteredSections);
       } catch (err) {
         console.error('Ошибка при загрузке разделов:', err);
         setError('Не удалось загрузить разделы');
@@ -53,7 +58,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
     };
 
     fetchSections();
-  }, []);
+  }, [isEditing, initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -66,15 +71,14 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
     setError('');
 
     try {
-      const url = isEditing ? `/api/articles` : '/api/articles';
+      const url = '/api/sections';
       const method = isEditing ? 'PUT' : 'POST';
       
       const payload = {
         ...(isEditing && initialData?._id && { id: initialData._id }),
-        title: formData.title,
-        content: formData.content,
-        section: parseInt(formData.section as string),
-        author: 'Текущий пользователь', // В реальном приложении должен быть текущий пользователь
+        name: formData.name,
+        priority: parseInt(formData.priority.toString()),
+        ...(formData.parentId && { parentId: formData.parentId }),
       };
 
       const response = await fetch(url, {
@@ -90,11 +94,11 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
         throw new Error(errorData.error || 'Произошла ошибка');
       }
 
-      router.push('/articles');
+      router.push('/articles'); // Перенаправляем на страницу со всеми разделами и статьями
       router.refresh();
     } catch (err: any) {
-      console.error('Ошибка при сохранении статьи:', err);
-      setError(err.message || 'Произошла ошибка при сохранении статьи');
+      console.error('Ошибка при сохранении раздела:', err);
+      setError(err.message || 'Произошла ошибка при сохранении раздела');
     } finally {
       setIsSubmitting(false);
     }
@@ -117,7 +121,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
           disabled={isSubmitting}
         >
           <RiSaveLine className="mr-2" size={20} />
-          {isSubmitting ? 'Сохранение...' : 'Сохранить статью'}
+          {isSubmitting ? 'Сохранение...' : 'Сохранить раздел'}
         </button>
       </div>
 
@@ -129,67 +133,50 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
 
       <div className="card mb-6">
         <div className="mb-6">
-          <label htmlFor="title" className="block mb-2 font-medium">Заголовок статьи</label>
+          <label htmlFor="name" className="block mb-2 font-medium">Название раздела</label>
           <input 
             type="text" 
-            id="title"
-            name="title"
-            value={formData.title}
+            id="name"
+            name="name"
+            value={formData.name}
             onChange={handleChange}
-            placeholder="Введите заголовок..." 
+            placeholder="Введите название раздела..." 
             className="input-field text-xl"
             required
           />
         </div>
 
         <div className="mb-6">
-          <label htmlFor="section" className="block mb-2 font-medium">Раздел</label>
+          <label htmlFor="priority" className="block mb-2 font-medium">Приоритет (порядок сортировки)</label>
+          <input 
+            type="number" 
+            id="priority"
+            name="priority"
+            value={formData.priority}
+            onChange={handleChange}
+            placeholder="Порядковый номер..." 
+            className="input-field"
+            min="0"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label htmlFor="parentId" className="block mb-2 font-medium">Родительский раздел (опционально)</label>
           <select 
-            id="section"
-            name="section"
-            value={formData.section}
+            id="parentId"
+            name="parentId"
+            value={formData.parentId}
             onChange={handleChange}
             className="input-field"
-            required
           >
-            <option value="">Выберите раздел</option>
+            <option value="">Без родительского раздела</option>
             {sections.map(section => (
-              <option key={section._id} value={section.priority}>
+              <option key={section._id} value={section._id}>
                 {section.name}
               </option>
             ))}
           </select>
-        </div>
-        
-        <div>
-          <label htmlFor="content" className="block mb-2 font-medium">Содержание</label>
-          
-          <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-            {/* Editor toolbar */}
-            <div className="flex flex-wrap items-center gap-1 p-2 border-b border-white/10">
-              <button type="button" className="p-2 rounded hover:bg-white/10 transition">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M6 4h8v5h-8z" fill="white" />
-                  <path d="M6 15h12v5h-12z" fill="white" />
-                  <path d="M16 4h2v5h-2zM6 10h12v4h-12z" fill="white" />
-                </svg>
-              </button>
-              {/* ... остальные кнопки форматирования ... */}
-            </div>
-            
-            {/* Editor content */}
-            <div className="min-h-[400px] p-4">
-              <textarea 
-                id="content"
-                name="content"
-                value={formData.content}
-                onChange={handleChange}
-                className="bg-transparent w-full h-full min-h-[400px] resize-none outline-none"
-                placeholder="Введите содержание статьи..."
-                required
-              ></textarea>
-            </div>
-          </div>
         </div>
       </div>
       
@@ -206,11 +193,11 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ isEditing = false, initialDat
           disabled={isSubmitting}
         >
           <RiSaveLine className="mr-2" size={20} />
-          {isSubmitting ? 'Сохранение...' : 'Сохранить статью'}
+          {isSubmitting ? 'Сохранение...' : 'Сохранить раздел'}
         </button>
       </div>
     </form>
   );
 };
 
-export default ArticleForm; 
+export default SectionForm; 

@@ -1,8 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
-import { RiAddLine, RiFilePaperLine, RiFolder3Line, RiSearchLine } from 'react-icons/ri';
+import { RiAddLine, RiFilePaperLine, RiFolder3Line, RiSearchLine, RiEdit2Line } from 'react-icons/ri';
 import Navigation from '../components/Navigation';
 import DeleteArticleButton from '../components/DeleteArticleButton';
+import DeleteSectionButton from '../components/DeleteSectionButton';
 
 // Интерфейсы для типизации данных
 interface Article {
@@ -107,11 +108,18 @@ export default async function ArticlesPage() {
             <div className="card p-6 text-center">
               <p className="text-lg mb-4">База знаний пуста</p>
               <Link 
-                href="/articles/new" 
-                className="btn-primary inline-flex items-center"
+                href="/sections/new" 
+                className="btn-primary inline-flex items-center mr-4"
               >
                 <RiAddLine className="mr-2" size={20} />
-                Создать первую статью
+                Создать раздел
+              </Link>
+              <Link 
+                href="/articles/new" 
+                className="btn-outline inline-flex items-center"
+              >
+                <RiAddLine className="mr-2" size={20} />
+                Создать статью
               </Link>
             </div>
           ) : (
@@ -125,9 +133,17 @@ export default async function ArticlesPage() {
                     </div>
                     
                     <div className="flex items-center gap-3">
-                      <button className="text-sm text-white/70 hover:text-white transition">
+                      <Link 
+                        href={`/sections/${section._id}/edit`}
+                        className="flex items-center text-sm text-white/70 hover:text-white transition"
+                      >
+                        <RiEdit2Line className="mr-1" size={16} />
                         Редактировать
-                      </button>
+                      </Link>
+                      <DeleteSectionButton 
+                        sectionId={section._id} 
+                        buttonText="Удалить раздел"
+                      />
                       <Link 
                         href={`/sections/new?parent=${section._id}`}
                         className="text-sm text-primary hover:text-primary/80 transition"
