@@ -26,7 +26,10 @@ const DeleteArticleButton: React.FC<DeleteArticleButtonProps> = ({
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/articles?id=${articleId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const url = apiUrl ? `${apiUrl}/api/articles?id=${articleId}` : `/api/articles?id=${articleId}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
       });
 

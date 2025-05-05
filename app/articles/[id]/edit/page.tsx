@@ -1,11 +1,15 @@
 import React from 'react';
+import { Suspense } from 'react';
 import Navigation from '../../../components/Navigation';
 import ArticleForm from '../../../components/ArticleForm';
 
 // Серверный компонент для загрузки данных статьи
 async function getArticle(id: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/articles?id=${id}`, { 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const url = apiUrl ? `${apiUrl}/api/articles?id=${id}` : `/api/articles?id=${id}`;
+    
+    const res = await fetch(url, { 
       cache: 'no-store' 
     });
     
@@ -28,8 +32,11 @@ export default async function EditArticlePage({ params }: { params: { id: string
       <Navigation />
       <main className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-bold mb-6">Редактирование статьи</h1>
           {article ? (
-            <ArticleForm isEditing initialData={article} />
+            <Suspense fallback={<div>Загрузка...</div>}>
+              <ArticleForm isEditing initialData={article} />
+            </Suspense>
           ) : (
             <div className="card p-6">
               <p className="text-red-500">Не удалось загрузить статью. Проверьте ID и попробуйте еще раз.</p>

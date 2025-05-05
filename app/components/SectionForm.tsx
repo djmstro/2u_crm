@@ -41,7 +41,9 @@ const SectionForm: React.FC<SectionFormProps> = ({ isEditing = false, initialDat
   useEffect(() => {
     const fetchSections = async () => {
       try {
-        const response = await fetch('/api/sections');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+        const url = apiUrl ? `${apiUrl}/api/sections` : '/api/sections';
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Не удалось загрузить разделы');
         }
@@ -71,7 +73,8 @@ const SectionForm: React.FC<SectionFormProps> = ({ isEditing = false, initialDat
     setError('');
 
     try {
-      const url = '/api/sections';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const url = apiUrl ? `${apiUrl}/api/sections` : '/api/sections';
       const method = isEditing ? 'PUT' : 'POST';
       
       const payload = {

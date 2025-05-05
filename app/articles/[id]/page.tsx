@@ -7,7 +7,10 @@ import DeleteArticleButton from '../../components/DeleteArticleButton';
 // Серверный компонент для загрузки данных статьи
 async function getArticle(id: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/articles?id=${id}`, { 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const url = apiUrl ? `${apiUrl}/api/articles?id=${id}` : `/api/articles?id=${id}`;
+    
+    const res = await fetch(url, { 
       cache: 'no-store' 
     });
     

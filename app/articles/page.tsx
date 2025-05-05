@@ -25,7 +25,10 @@ interface Section {
 // Функция для загрузки разделов
 async function getSections() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/sections`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const url = apiUrl ? `${apiUrl}/api/sections` : '/api/sections';
+    
+    const res = await fetch(url, {
       cache: 'no-store'
     });
     
@@ -43,7 +46,10 @@ async function getSections() {
 // Функция для загрузки статей
 async function getArticles() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/articles`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const url = apiUrl ? `${apiUrl}/api/articles` : '/api/articles';
+    
+    const res = await fetch(url, {
       cache: 'no-store'
     });
     

@@ -26,7 +26,10 @@ const DeleteSectionButton: React.FC<DeleteSectionButtonProps> = ({
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/sections?id=${sectionId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const url = apiUrl ? `${apiUrl}/api/sections?id=${sectionId}` : `/api/sections?id=${sectionId}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
       });
 

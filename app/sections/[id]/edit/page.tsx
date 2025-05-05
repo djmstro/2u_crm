@@ -1,11 +1,15 @@
 import React from 'react';
+import { Suspense } from 'react';
 import Navigation from '../../../components/Navigation';
 import SectionForm from '../../../components/SectionForm';
 
 // Серверный компонент для загрузки данных раздела
 async function getSection(id: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/sections?id=${id}`, { 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const url = apiUrl ? `${apiUrl}/api/sections?id=${id}` : `/api/sections?id=${id}`;
+    
+    const res = await fetch(url, { 
       cache: 'no-store' 
     });
     
@@ -30,7 +34,9 @@ export default async function EditSectionPage({ params }: { params: { id: string
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">Редактирование раздела</h1>
           {section ? (
-            <SectionForm isEditing initialData={section} />
+            <Suspense fallback={<div>Загрузка...</div>}>
+              <SectionForm isEditing initialData={section} />
+            </Suspense>
           ) : (
             <div className="card p-6">
               <p className="text-red-500">Не удалось загрузить раздел. Проверьте ID и попробуйте еще раз.</p>
